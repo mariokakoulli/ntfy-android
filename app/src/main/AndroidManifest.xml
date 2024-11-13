@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="io.heckel.ntfy">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -11,6 +10,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/> <!-- Only required on SDK <= 28 -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/> <!-- To reschedule the websocket retry -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> <!-- As of Android 13, we need to ask for permission to post notifications -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING"/>
 
     <!--
         Permission REQUEST_INSTALL_PACKAGES (F-Droid only!):
@@ -21,20 +21,19 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <application
-            android:name=".app.Application"
-            android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher"
-            android:supportsRtl="true"
-            android:theme="@style/AppTheme"
-            android:networkSecurityConfig="@xml/network_security_config"
-            android:usesCleartextTraffic="true">
+        android:name=".app.Application"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="true">
 
         <!-- Main activity -->
         <activity
-                android:name=".ui.MainActivity"
-                android:label="@string/app_name"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -44,12 +43,12 @@
 
         <!-- Detail activity -->
         <activity
-                android:name=".ui.DetailActivity"
-                android:parentActivityName=".ui.MainActivity"
-                android:exported="true">
+            android:name=".ui.DetailActivity"
+            android:parentActivityName=".ui.MainActivity"
+            android:exported="true">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value=".ui.MainActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.MainActivity"/>
 
             <!-- Open ntfy:// links with the app -->
             <intent-filter android:label="@string/app_name">
@@ -62,17 +61,17 @@
 
         <!-- Settings activity -->
         <activity
-                android:name=".ui.SettingsActivity"
-                android:parentActivityName=".ui.MainActivity">
+            android:name=".ui.SettingsActivity"
+            android:parentActivityName=".ui.MainActivity">
             <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value=".ui.MainActivity"/>
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.MainActivity"/>
         </activity>
 
         <!-- Detail settings activity -->
         <activity
-                android:name=".ui.DetailSettingsActivity"
-                android:parentActivityName=".ui.DetailActivity">
+            android:name=".ui.DetailSettingsActivity"
+            android:parentActivityName=".ui.DetailActivity">
         </activity>
 
         <!-- Share file activity, incoming files/shares -->
@@ -90,17 +89,20 @@
 
         <!-- Hack: Activity used for "view" action button with "clear=true" (to be able to cancel notifications and show a URL) -->
         <activity
-                android:name=".msg.NotificationService$ViewActionWithClearActivity"
-                android:exported="false">
+            android:name=".msg.NotificationService$ViewActionWithClearActivity"
+            android:exported="false">
         </activity>
 
         <!-- Subscriber foreground service for hosts other than ntfy.sh -->
-        <service android:name=".service.SubscriberService"/>
+        <service android:name=".service.SubscriberService"
+            android:foregroundServiceType="remoteMessaging"
+            android:exported="false">
+        </service>
 
         <!-- Subscriber service restart on reboot -->
         <receiver
-                android:name=".service.SubscriberService$BootStartReceiver"
-                android:enabled="true"
+            android:name=".service.SubscriberService$BootStartReceiver"
+            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
@@ -109,15 +111,15 @@
 
         <!-- Subscriber service restart on destruction -->
         <receiver
-                android:name=".service.SubscriberService$AutoRestartReceiver"
-                android:enabled="true"
-                android:exported="false"/>
+            android:name=".service.SubscriberService$AutoRestartReceiver"
+            android:enabled="true"
+            android:exported="false"/>
 
         <!-- Broadcast receiver to send messages via intents -->
         <receiver
-                android:name=".msg.BroadcastService$BroadcastReceiver"
-                android:enabled="true"
-                android:exported="true">
+            android:name=".msg.BroadcastService$BroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="io.heckel.ntfy.SEND_MESSAGE"/>
             </intent-filter>
@@ -125,9 +127,9 @@
 
         <!-- Broadcast receiver for UnifiedPush; must match https://github.com/UnifiedPush/UP-spec/blob/main/specifications.md -->
         <receiver
-                android:name=".up.BroadcastReceiver"
-                android:enabled="true"
-                android:exported="true">
+            android:name=".up.BroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
                 <action android:name="org.unifiedpush.android.distributor.REGISTER"/>
                 <action android:name="org.unifiedpush.android.distributor.UNREGISTER"/>
@@ -137,43 +139,43 @@
 
         <!-- Broadcast receiver for the "Download"/"Cancel" attachment action in the notification popup -->
         <receiver
-                android:name=".msg.NotificationService$UserActionBroadcastReceiver"
-                android:enabled="true"
-                android:exported="false">
+            android:name=".msg.NotificationService$UserActionBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
         </receiver>
 
         <!-- Broadcast receiver for when the notification is swiped away (currently only to cancel the insistent sound) -->
         <receiver
-                android:name=".msg.NotificationService$DeleteBroadcastReceiver"
-                android:enabled="true"
-                android:exported="false">
+            android:name=".msg.NotificationService$DeleteBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
         </receiver>
 
         <!-- Firebase messaging (note that this is empty in the F-Droid flavor) -->
         <service
-                android:name=".firebase.FirebaseService"
-                android:exported="false">
+            android:name=".firebase.FirebaseService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
         <meta-data
-                android:name="firebase_analytics_collection_enabled"
-                android:value="false"/>
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false"/>
         <meta-data
-                android:name="com.google.firebase.messaging.default_notification_icon"
-                android:resource="@drawable/ic_notification"/>
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification"/>
 
         <!-- FileProvider required for older Android versions (<= P), to allow passing the file URI in the open intent.
              Avoids "exposed beyond app through Intent.getData" exception, see see https://stackoverflow.com/a/57288352/1440785 -->
         <provider
-                android:name="androidx.core.content.FileProvider"
-                android:authorities="${applicationId}.provider"
-                android:exported="false"
-                android:grantUriPermissions="true">
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
-                    android:name="android.support.FILE_PROVIDER_PATHS"
-                    android:resource="@xml/file_paths"/>
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
         </provider>
     </application>
 </manifest>
