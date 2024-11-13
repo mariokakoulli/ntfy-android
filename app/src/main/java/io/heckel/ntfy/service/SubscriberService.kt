@@ -4,6 +4,7 @@ import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -98,7 +99,8 @@ class SubscriberService : Service() {
         notificationManager = createNotificationChannel()
         serviceNotification = createNotification(title, text)
 
-        startForeground(NOTIFICATION_SERVICE_ID, serviceNotification)
+        startForeground(NOTIFICATION_SERVICE_ID,
+            serviceNotification!!, FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING)
     }
 
     override fun onDestroy() {
@@ -116,7 +118,7 @@ class SubscriberService : Service() {
         Log.d(TAG, "Starting the foreground service task")
         isServiceStarted = true
         saveServiceState(this, ServiceState.STARTED)
-        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+        wakeLock = (getSystemService(POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         }
         refreshConnections()
@@ -273,7 +275,7 @@ class SubscriberService : Service() {
 
     private fun createNotificationChannel(): NotificationManager? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelName = getString(R.string.channel_subscriber_service_name) // Show's up in UI
             val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW).let {
                 it.setShowBadge(false) // Don't show long-press badge
@@ -312,8 +314,8 @@ class SubscriberService : Service() {
             it.setPackage(packageName)
         }
         val restartServicePendingIntent: PendingIntent = PendingIntent.getService(this, 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-        applicationContext.getSystemService(Context.ALARM_SERVICE)
-        val alarmService: AlarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        applicationContext.getSystemService(ALARM_SERVICE)
+        val alarmService: AlarmManager = applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
         alarmService.set(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + 1000, restartServicePendingIntent)
     }
 
@@ -360,14 +362,14 @@ class SubscriberService : Service() {
         private const val SHARED_PREFS_SERVICE_STATE = "ServiceState"
 
         fun saveServiceState(context: Context, state: ServiceState) {
-            val sharedPrefs = context.getSharedPreferences(SHARED_PREFS_ID, Context.MODE_PRIVATE)
+            val sharedPrefs = context.getSharedPreferences(SHARED_PREFS_ID, MODE_PRIVATE)
             sharedPrefs.edit()
                 .putString(SHARED_PREFS_SERVICE_STATE, state.name)
                 .apply()
         }
 
         fun readServiceState(context: Context): ServiceState {
-            val sharedPrefs = context.getSharedPreferences(SHARED_PREFS_ID, Context.MODE_PRIVATE)
+            val sharedPrefs = context.getSharedPreferences(SHARED_PREFS_ID, MODE_PRIVATE)
             val value = sharedPrefs.getString(SHARED_PREFS_SERVICE_STATE, ServiceState.STOPPED.name)
             return ServiceState.valueOf(value!!)
         }
